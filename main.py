@@ -1,8 +1,17 @@
 import requests
 import argparse
+from datetime import datetime
 
 API_URL = 'https://musicbrainz.org/ws/2/'
 USER_AGENT = 'album_search_tool/1.0 ( gmwarzecha@tutanota.com )'
+
+def format_release_date(date_str):
+  try:
+    date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+    return date_obj.strftime("%Y")
+  except ValueError:
+    return date_str
+
 
 def get_artist_id(artist_name):
   params = {
@@ -46,9 +55,19 @@ def get_artist_albums(artist_id):
     releases = data.get('release-groups', [])
 
     if releases:
-      print("Releases:") 
+      albums = []
       for release in releases:
-        print(f"- {release['title']}\n-- {release['first-release-date']}\n")
+        title = release['title']
+        release_date_str = release['first-release-date']
+        release_date = format_release_date(release_date_str)
+        if release_date:
+          albums.append((title, release_date))
+
+      albums.sort(key=lambda x: x[1])
+
+      print("\nReleases:\n") 
+      for title, release_date in albums:
+        print(f"- {title} {release_date}\n")
         
     else:
       print("No albums found for this artist")
